@@ -1,0 +1,22 @@
+[
+  {
+    "urlbase": "https://ru.hexlet.io/",
+    "urlpath": "/courses",
+    "filepath": "__fixtures__/index.html"
+  },
+  {
+    "urlbase": "https://ru.hexlet.io/",
+    "urlpath": "/assets/application.css",
+    "filepath": "__fixtures__/expected-dir/ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css"
+  },
+  {
+    "urlbase": "https://ru.hexlet.io/",
+    "urlpath": "/assets/professions/nodejs.png",
+    "filepath": "__fixtures__/expected-dir/ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png"
+  },
+  {
+    "urlbase": "https://ru.hexlet.io/",
+    "urlpath": "/packs/js/runtime.js",
+    "filepath": "__fixtures__/expected-dir/ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js"
+  }
+]
