@@ -1,4 +1,4 @@
-import { makeFileNameByUrl, makeDirNameByUrl } from '../src/file';
+import { makeFileNameByUrl, makeDirNameByUrl } from '../src/name';
 
 test.each([
   ['/assets/application.css', 'https://ru.hexlet.io/', 'ru-hexlet-io-assets-application.css'],
