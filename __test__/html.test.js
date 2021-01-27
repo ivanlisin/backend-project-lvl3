@@ -1,37 +1,36 @@
 import path from 'path';
 import { promises as fs } from 'fs';
-import cheerio from 'cheerio';
 import { makeDirNameByUrl, makeFileNameByUrl } from '../src/name';
 import { getSourceLinks, replaceSrcLinksOnFilePaths } from '../src/html';
 
-const readFixtureFile = async (filepath) => {
-  const fixtureFilePath = path.join('__fixtures__', filepath);
+const url = 'https://ru.hexlet.io/courses';
+const sourceLinks = [
+  '/assets/application.css',
+  '/assets/professions/nodejs.png',
+  '/courses',
+  'https://ru.hexlet.io/packs/js/runtime.js',
+];
+
+const readFixtureFile = async (...pathSegments) => {
+  const fixtureFilePath = path.join('__fixtures__', ...pathSegments);
   return fs.readFile(fixtureFilePath, 'utf-8');
 };
 
 test('get source links from html', async () => {
-  const data = await readFixtureFile('index.html');
-  const { url, srcLinks: expected } = JSON.parse(await readFixtureFile('page-loader-config.json'));
+  const html = await readFixtureFile('index.html');
   const { origin } = new URL(url);
-  const actual = getSourceLinks(data, origin);
+  const actual = getSourceLinks(html, origin);
+  const expected = sourceLinks;
   expect(actual.sort()).toEqual(expected.sort());
 });
 
-const getHtml = async (...pathSegments) => {
-  const filepath = path.join('__fixtures__', ...pathSegments);
-  const data = await fs.readFile(filepath, 'utf-8');
-  return cheerio.load(data).html();
-};
-
 test('replace src links on filepaths', async () => {
-  const html = await getHtml('index.html');
-
-  const { url } = JSON.parse(await readFixtureFile('page-loader-config.json'));
+  const html = await readFixtureFile('index.html');
   const { origin } = new URL(url);
-  const expected = await getHtml('expected-dir', 'ru-hexlet-io-courses.html');
-
-  const srcDir = makeDirNameByUrl(url, origin);
-  const makeFilePathByUrl = (innerUrl) => path.join(srcDir, makeFileNameByUrl(innerUrl, origin));
-
+  const makeFilePathByUrl = (innerUrl) => {
+    const srcDir = makeDirNameByUrl(url, origin);
+    return path.join(srcDir, makeFileNameByUrl(innerUrl, origin));
+  };
+  const expected = await readFixtureFile('expected-dir', 'ru-hexlet-io-courses.html');
   expect(replaceSrcLinksOnFilePaths(html, origin, makeFilePathByUrl)).toEqual(expected);
 });
