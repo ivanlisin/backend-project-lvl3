@@ -4,57 +4,72 @@ import os from 'os';
 import path from 'path';
 import { promises as fs } from 'fs';
 import nock from 'nock';
+import _ from 'lodash';
 import loadPage from '../src/page-loader';
 
 const url = 'https://ru.hexlet.io/courses';
 let tmpdir;
+let expectedSrcDirSize;
 
-const defineTmpDir = async () => {
-  const dirpath = path.join(os.tmpdir(), 'page-loader-');
-  tmpdir = await fs.mkdtemp(dirpath);
+const readFixtureFile = async (filename) => {
+  const filepath = path.join('__fixtures__', filename);
+  const data = await fs.readFile(filepath, 'utf-8');
+  return data.trim();
 };
 
 const turnOnNock = async () => {
-  const configPath = path.join('__fixtures__', 'nock-config.json');
-  const nockConfig = JSON.parse(await fs.readFile(configPath, 'utf-8'));
-  const promises = nockConfig.map(async ({ urlbase, urlpath, filepath }) => {
-    const data = await fs.readFile(filepath, 'utf-8');
-    nock(urlbase).get(urlpath).reply(200, data);
+  const { origin, pathname } = new URL(url);
+
+  const data = await readFixtureFile('response-index.html');
+  nock(origin).get(pathname).reply(200, data);
+
+  const responceData = 'some data';
+  const sourceLinks = [
+    '/assets/application.css',
+    '/assets/professions/nodejs.png',
+    '/courses',
+    '/packs/js/runtime.js',
+  ];
+  expectedSrcDirSize = sourceLinks.length * responceData.length;
+
+  sourceLinks.forEach((link) => {
+    const innerData = responceData;
+    nock(origin).get(link).reply(200, innerData);
   });
-  await Promise.all(promises);
 };
 
 beforeAll(async () => {
-  await defineTmpDir();
+  tmpdir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   await turnOnNock();
   await loadPage(url, tmpdir);
 });
 
-test('match actual and expected directory size', async () => {
-  const actualStat = await fs.stat(tmpdir);
-  const expectedDir = path.join('__fixtures__', 'expected-dir');
-  const expectedStat = await fs.stat(expectedDir);
-  expect(actualStat.size).toBe(expectedStat.size);
+test('check index', async () => {
+  const indexFileName = 'ru-hexlet-io-courses.html';
+  const filepath = path.join(tmpdir, indexFileName);
+  const actual = await fs.readFile(filepath, 'utf-8');
+  const expected = await readFixtureFile('local-index.html');
+  expect(actual).toEqual(expected);
 });
 
-const readActualFile = (filepath) => {
-  const actualFile = path.join(tmpdir, filepath);
-  return fs.readFile(actualFile, 'utf-8');
-};
+test('check source files', async () => {
+  const srcDirName = 'ru-hexlet-io-courses_files';
+  const expectedSrcFileNames = [
+    'ru-hexlet-io-assets-application.css',
+    'ru-hexlet-io-assets-professions-nodejs.png',
+    'ru-hexlet-io-courses.html',
+    'ru-hexlet-io-packs-js-runtime.js',
+  ];
 
-const readExpectedFile = (filepath) => {
-  const fixtureFilePath = path.join('__fixtures__', 'expected-dir', filepath);
-  return fs.readFile(fixtureFilePath, 'utf-8');
-};
+  const actualSrcFileNames = await fs.readdir(path.join(tmpdir, srcDirName));
+  const actualSrcDirSize = await (async () => {
+    const filenames = actualSrcFileNames;
+    const filepaths = filenames.map((filename) => path.join(tmpdir, srcDirName, filename));
+    const promises = filepaths.map(fs.stat);
+    const stats = await Promise.all(promises);
+    return _.sumBy(stats.filter((stat) => stat.isFile()), 'size');
+  })();
 
-test.each([
-  ['ru-hexlet-io-courses.html'],
-  ['ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css'],
-  ['ru-hexlet-io-courses_files/ru-hexlet-io-assets-professions-nodejs.png'],
-  ['ru-hexlet-io-courses_files/ru-hexlet-io-courses.html'],
-  ['ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js'],
-])('match actual and expected files: %s', async (filepath) => {
-  const actual = await readActualFile(filepath);
-  const expected = await readExpectedFile(filepath);
-  expect(actual).toBe(expected);
+  expect(actualSrcFileNames.sort()).toEqual(expectedSrcFileNames.sort());
+  expect(actualSrcDirSize).toBe(expectedSrcDirSize);
 });
