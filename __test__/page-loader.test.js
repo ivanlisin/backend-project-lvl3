@@ -33,8 +33,7 @@ const turnOnNock = async () => {
   expectedSrcDirSize = sourceLinks.length * responceData.length;
 
   sourceLinks.forEach((link) => {
-    const innerData = responceData;
-    nock(origin).get(link).reply(200, innerData);
+    nock(origin).get(link).reply(200, responceData);
   });
 };
 
