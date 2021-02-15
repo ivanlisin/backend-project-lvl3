@@ -10,7 +10,7 @@
     "page-loader": "bin/cli.js"
   },
   "scripts": {
-    "test": "npx -n --experimental-vm-modules jest"
+    "test": "DEBUG=page-loader npx -n --experimental-vm-modules jest"
   },
   "type": "module",
   "jest": {
@@ -40,6 +40,7 @@
     "axios": "^0.21.1",
     "cheerio": "^1.0.0-rc.5",
     "commander": "^7.0.0",
+    "debug": "^4.3.1",
     "lodash": "^4.17.20",
     "nock": "^13.0.5"
   }
