@@ -16,9 +16,10 @@ import loadPage from '../src/page-loader.js';
     .version(version)
     .option('--output [dirpath]', 'output directory', '.')
     .action(async (url) => {
+      const options = program.opts();
       try {
         // @ts-ignore
-        loadPage(url, program.output);
+        await loadPage(url, options.output);
       } catch (err) {
         console.log(err.message);
       }
