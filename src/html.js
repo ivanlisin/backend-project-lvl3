@@ -1,3 +1,5 @@
+// @ts-check
+
 import cheerio from 'cheerio';
 
 const tagAndResourceAttributeMapping = { img: 'src', link: 'href', script: 'src' };
@@ -6,6 +8,7 @@ export const getSourceLinks = (html, origin) => {
   const $ = cheerio.load(html);
   return Object.entries(tagAndResourceAttributeMapping)
     .map(([tag, resAttr]) => $(tag).map((i, el) => $(el).attr(resAttr)).toArray())
+    // @ts-ignore
     .flat(1)
     .filter((url) => {
       const { href } = new URL(url, origin);
