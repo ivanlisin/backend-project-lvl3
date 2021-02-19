@@ -10,13 +10,15 @@ const downloadSourceFiles = (url, outputDir, html) => {
   const { origin } = new URL(url);
   const sourceLinks = getSourceLinks(html, origin);
   const tasks = new Listr(sourceLinks.map((link) => {
-    const { href } = new URL(link, origin);
     const srcDirName = makeDirNameByUrl(url, origin);
     const filename = makeFileNameByUrl(link, origin);
     const filepath = path.join(outputDir, srcDirName, filename);
     return {
       title: filename,
-      task: () => httpGet(href).then(({ data }) => writeFile(filepath, data)),
+      task: () => {
+        const { href } = new URL(link, origin);
+        return httpGet(href).then(({ data }) => writeFile(filepath, data));
+      },
     };
   }));
   return tasks.run();
@@ -24,19 +26,20 @@ const downloadSourceFiles = (url, outputDir, html) => {
 
 const downloadIndexFile = (url, outputDir, html) => {
   const { origin } = new URL(url);
-  const filename = makeFileNameByUrl(url, origin);
-  const filepath = path.join(outputDir, filename);
   const updatedHtml = replaceSrcLinksOnFilePaths(html, origin, (link) => {
-    const srcDirName = makeDirNameByUrl(url, origin);
-    return path.join(srcDirName, makeFileNameByUrl(link, origin));
+    const srcDirName = makeDirNameByUrl(url);
+    const srcFileName = makeFileNameByUrl(link, origin);
+    return path.join(srcDirName, srcFileName);
   });
+  const filename = makeFileNameByUrl(url);
+  const filepath = path.join(outputDir, filename);
   return writeFile(filepath, updatedHtml);
 };
 
 const loadPage = (url, outputDir) => httpGet(url).then((response) => {
   const html = response.data;
-  const indexFilePath = path.join(outputDir, makeFileNameByUrl(url));
   const srcDirPath = path.join(outputDir, makeDirNameByUrl(url));
+  const indexFilePath = path.join(outputDir, makeFileNameByUrl(url));
   return mkdir(srcDirPath)
     .then(() => downloadSourceFiles(url, outputDir, html))
     .then(() => downloadIndexFile(url, outputDir, html))
