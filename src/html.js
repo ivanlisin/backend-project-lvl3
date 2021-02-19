@@ -7,7 +7,11 @@ const tagAndResourceAttributeMapping = { img: 'src', link: 'href', script: 'src'
 export const getSourceLinks = (html, origin) => {
   const $ = cheerio.load(html);
   return Object.entries(tagAndResourceAttributeMapping)
-    .map(([tag, resAttr]) => $(tag).map((i, el) => $(el).attr(resAttr)).toArray())
+    .map(([tag, resAttr]) => {
+      const elements = $(tag);
+      const links = elements.map((i, el) => $(el).attr(resAttr));
+      return links.toArray();
+    })
     // @ts-ignore
     .flat(1)
     .filter((url) => {
@@ -23,7 +27,8 @@ export const replaceSrcLinksOnFilePaths = (html, origin, makeFilePathByUrl) => {
       $(tag).each((i, el) => {
         const link = $(el).attr(resAttr);
         const { href } = new URL(link, origin);
-        if (href.match(new RegExp(origin))) {
+        const isLinkToOriginHost = href.match(new RegExp(origin));
+        if (isLinkToOriginHost) {
           const filepath = makeFilePathByUrl(link, origin);
           $(el).attr(resAttr, filepath);
         }
