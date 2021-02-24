@@ -34,7 +34,7 @@ export const httpGet = (url) => wrapWithLog(
   axios.get,
   [url],
   () => `${spaceMap.httpGet} ${url} ok`,
-  (err) => `${spaceMap.httpGet}   ${url} ${err.message}`,
+  (err) => `${spaceMap.httpGet} ${url} ${err.message}`,
 );
 
 export const mkdir = (dirpath) => wrapWithLog(
