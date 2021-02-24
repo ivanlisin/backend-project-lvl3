@@ -27,8 +27,9 @@ export const replaceSrcLinksOnFilePaths = (html, origin, makeFilePathByUrl) => {
       $(tag).each((i, el) => {
         const link = $(el).attr(resAttr);
         const { href } = new URL(link, origin);
-        const isLinkToOriginHost = href.match(new RegExp(origin));
-        if (isLinkToOriginHost) {
+        const hasLink = typeof link === 'string';
+        const isLinkToOriginHost = href.includes(origin);
+        if (hasLink && isLinkToOriginHost) {
           const filepath = makeFilePathByUrl(link, origin);
           $(el).attr(resAttr, filepath);
         }

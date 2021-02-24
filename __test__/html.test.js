@@ -3,12 +3,21 @@ import { promises as fs } from 'fs';
 import { getSourceLinks, replaceSrcLinksOnFilePaths } from '../src/html';
 
 const url = 'https://ru.hexlet.io/courses';
+const { origin } = new URL(url);
+
+let responseIndex;
+let localIndex;
 
 const readFixtureFile = async (filename) => {
   const filepath = path.join('__fixtures__', filename);
   const data = await fs.readFile(filepath, 'utf-8');
   return data.trim();
 };
+
+beforeAll(async () => {
+  responseIndex = await readFixtureFile('response-index.html');
+  localIndex = await readFixtureFile('local-index.html');
+});
 
 test('get source links from html', async () => {
   const sourceLinks = [
@@ -17,9 +26,7 @@ test('get source links from html', async () => {
     '/courses',
     'https://ru.hexlet.io/packs/js/runtime.js',
   ];
-  const html = await readFixtureFile('response-index.html');
-  const { origin } = new URL(url);
-  const actual = getSourceLinks(html, origin).sort();
+  const actual = getSourceLinks(responseIndex, origin).sort();
   const expected = sourceLinks.sort();
   expect(actual).toEqual(expected);
 });
@@ -36,10 +43,16 @@ const makeFilePathByUrl = (link) => {
   return path.join(srcDirName, filename);
 };
 
-test('replace src links on filepaths', async () => {
-  const html = await readFixtureFile('response-index.html');
-  const { origin } = new URL(url);
-  const actual = replaceSrcLinksOnFilePaths(html, origin, makeFilePathByUrl);
-  const expected = await readFixtureFile('local-index.html');
+test('replace src links on filepaths', () => {
+  const actual = replaceSrcLinksOnFilePaths(responseIndex, origin, makeFilePathByUrl);
+  const expected = localIndex;
+  expect(actual).toEqual(expected);
+});
+
+test('replace src links on filepaths 2', () => {
+  const substr = ' href="https://cdn2.hexlet.io/assets/menu.css"';
+  const updatedHtml = responseIndex.replace(substr, '');
+  const actual = replaceSrcLinksOnFilePaths(updatedHtml, origin, makeFilePathByUrl);
+  const expected = localIndex.replace(substr, '');
   expect(actual).toEqual(expected);
 });
