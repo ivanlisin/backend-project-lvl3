@@ -51,8 +51,8 @@ test('replace src links on filepaths', () => {
 
 test('replace src links on filepaths 2', () => {
   const substr = ' href="https://cdn2.hexlet.io/assets/menu.css"';
-  const updatedHtml = responseIndex.replace(substr, '');
-  const actual = replaceSrcLinksOnFilePaths(updatedHtml, origin, makeFilePathByUrl);
+  const html = responseIndex.replace(substr, '');
+  const actual = replaceSrcLinksOnFilePaths(html, origin, makeFilePathByUrl);
   const expected = localIndex.replace(substr, '');
   expect(actual).toEqual(expected);
 });
