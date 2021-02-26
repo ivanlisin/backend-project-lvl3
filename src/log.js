@@ -16,14 +16,6 @@ const wrapWithLog = (callback, args, makeOkMessage, makeFailMessage) => callback
     throw new Error(err);
   });
 
-const shortenPath = (pathToEl) => {
-  const segments = pathToEl.split('/').filter((s) => s !== '');
-  for (let i = 0; i < 6; i += 1) {
-    segments.shift();
-  }
-  return segments.join('/');
-};
-
 const spaceMap = {
   httpGet: 'httpGet  ',
   mkdir: 'mkdir    ',
@@ -40,13 +32,13 @@ export const httpGet = (url) => wrapWithLog(
 export const mkdir = (dirpath) => wrapWithLog(
   fs.mkdir,
   [dirpath],
-  () => `${spaceMap.mkdir} ${shortenPath(dirpath)} ok`,
-  (err) => `${spaceMap.mkdir} ${shortenPath(dirpath)} ${err.message}`,
+  () => `${spaceMap.mkdir} ${dirpath} ok`,
+  (err) => `${spaceMap.mkdir} ${dirpath} ${err.message}`,
 );
 
 export const writeFile = (filepath, data) => wrapWithLog(
   fs.writeFile,
   [filepath, data],
-  () => `${spaceMap.writeFile} ${shortenPath(filepath)} ok`,
-  (err) => `${spaceMap.writeFile} ${shortenPath(filepath)} ${err.message}`,
+  () => `${spaceMap.writeFile} ${filepath} ok`,
+  (err) => `${spaceMap.writeFile} ${filepath} ${err.message}`,
 );
