@@ -4,131 +4,123 @@ import os from 'os';
 import path from 'path';
 import { promises as fs } from 'fs';
 import nock from 'nock';
-import _ from 'lodash';
 import loadPage from '../src/page-loader';
 
 const url = 'https://ru.hexlet.io/courses';
-const { origin, pathname } = new URL(url);
+
+const indexFileName = 'ru-hexlet-io-courses.html';
+const srcDirName = 'ru-hexlet-io-courses_files';
+const srcLinks = [
+  '/assets/application.css',
+  '/assets/professions/nodejs.png',
+  '/courses',
+  '/packs/js/runtime.js',
+];
+const srcFilePaths = [
+  'ru-hexlet-io-assets-application.css',
+  'ru-hexlet-io-assets-professions-nodejs.png',
+  'ru-hexlet-io-courses.html',
+  'ru-hexlet-io-packs-js-runtime.js',
+];
 
 let responseIndex;
 let localIndex;
 
-const readFixtureFile = async (filename) => {
-  const filepath = path.join('__fixtures__', filename);
-  const data = await fs.readFile(filepath, 'utf-8');
-  return data.trim();
-};
+let tmpdir;
 
 beforeAll(async () => {
+  const readFixtureFile = async (filename) => {
+    const filepath = path.join('__fixtures__', filename);
+    const data = await fs.readFile(filepath, 'utf-8');
+    return data.trim();
+  };
   responseIndex = await readFixtureFile('response-index.html');
   localIndex = await readFixtureFile('local-index.html');
 });
 
-const makeTmpDir = async () => {
-  const dirpath = path.join(os.tmpdir(), 'page-loader-');
-  return fs.mkdtemp(dirpath);
-};
-
-const defaultResCodes = { index: 200, src: [200, 200, 200, 200] };
-
-const turnOnNock = (resCodes = defaultResCodes) => {
-  const data = responseIndex;
-  nock(origin).get(pathname).reply(resCodes.index, data);
-
-  const sourceLinks = [
-    '/assets/application.css',
-    '/assets/professions/nodejs.png',
-    '/courses',
-    '/packs/js/runtime.js',
-  ];
-  sourceLinks.forEach((link, i) => {
-    nock(origin).get(link).reply(resCodes.src[i], 'some data');
-  });
-};
-
-describe('successful', () => {
-  let tmpdir;
-
-  beforeAll(async () => {
-    tmpdir = await makeTmpDir();
-    turnOnNock();
-    await loadPage(url, tmpdir);
-  });
-
-  afterAll(() => {
-    nock.cleanAll();
-  });
-
-  test('check index', async () => {
-    const indexFileName = 'ru-hexlet-io-courses.html';
-    const filepath = path.join(tmpdir, indexFileName);
-    const actual = await fs.readFile(filepath, 'utf-8');
-    const expected = localIndex;
-    expect(actual).toEqual(expected);
-  });
-
-  test('check source files', async () => {
-    const srcDirName = 'ru-hexlet-io-courses_files';
-    const expectedSrcFileNames = [
-      'ru-hexlet-io-assets-application.css',
-      'ru-hexlet-io-assets-professions-nodejs.png',
-      'ru-hexlet-io-courses.html',
-      'ru-hexlet-io-packs-js-runtime.js',
-    ];
-    const expectedSrcDirSize = 'some data'.length * 4;
-
-    const actualSrcFileNames = await fs.readdir(path.join(tmpdir, srcDirName));
-    const actualSrcDirSize = await (async () => {
-      const filenames = actualSrcFileNames;
-      const filepaths = filenames.map((filename) => path.join(tmpdir, srcDirName, filename));
-      const promises = filepaths.map(fs.stat);
-      const stats = await Promise.all(promises);
-      return _.sumBy(stats.filter((stat) => stat.isFile()), 'size');
-    })();
-
-    expect(actualSrcFileNames.sort()).toEqual(expectedSrcFileNames.sort());
-    expect(actualSrcDirSize).toBe(expectedSrcDirSize);
-  });
+beforeEach(async () => {
+  const makeTmpDir = async () => {
+    const dirpath = path.join(os.tmpdir(), 'page-loader-');
+    return fs.mkdtemp(dirpath);
+  };
+  tmpdir = await makeTmpDir();
 });
 
-describe('fail', () => {
-  let tmpdir;
+afterEach(() => {
+  tmpdir = '';
+  nock.cleanAll();
+});
 
-  let i = 0;
-  const customResCodesForTest = {
-    2: { index: 400, src: [200, 200, 200, 200] },
-    3: { index: 200, src: [500, 200, 200, 200] },
-  };
-  beforeEach(async () => {
-    tmpdir = await makeTmpDir();
-    const resCodes = _.has(customResCodesForTest, i)
-      ? customResCodesForTest[i]
-      : defaultResCodes;
-    turnOnNock(resCodes);
-    i += 1;
-  });
+const nockSrcData = 'some data';
 
-  afterEach(() => {
-    nock.cleanAll();
+const turnOnNock = (resCodes = { index: 200, src: [200, 200, 200, 200] }) => {
+  const { origin, pathname } = new URL(url);
+  const data = responseIndex;
+  nock(origin).get(pathname).reply(resCodes.index, data);
+  srcLinks.forEach((link, i) => {
+    nock(origin).get(link).reply(resCodes.src[i], nockSrcData);
   });
+};
 
-  // 0
-  test('wrong url', async () => {
-    await expect(loadPage('wrong-url', tmpdir)).rejects.toThrow();
-  });
+test('successful page loading', async () => {
+  turnOnNock();
+  await loadPage(url, tmpdir);
 
-  // 1
-  test('not exist output dir', async () => {
-    await expect(loadPage(url, 'not-exist-url')).rejects.toThrow();
+  const relativeFilePaths = [
+    indexFileName,
+    ...srcFilePaths.map((filepath) => path.join(srcDirName, filepath)),
+  ];
+  const promises = relativeFilePaths.map((relativeFilePath) => {
+    const absoluteFilePath = path.join(tmpdir, relativeFilePath);
+    const actualData = fs.readFile(absoluteFilePath, 'utf-8');
+    const expectedData = relativeFilePath === indexFileName
+      ? localIndex
+      : nockSrcData;
+    return expect(actualData).resolves.toEqual(expectedData);
   });
+  await Promise.all(promises);
+});
 
-  // 2
-  test('http errors 1', async () => {
-    await expect(loadPage(url, tmpdir)).rejects.toThrow();
-  });
+test('wrong url', async () => {
+  turnOnNock();
+  const errorMessage = 'Invalid URL: wrong-url';
+  await expect(loadPage('wrong-url', tmpdir)).rejects.toThrow(errorMessage);
+});
 
-  // 3
-  test('http errors 2', async () => {
-    await expect(loadPage(url, tmpdir)).rejects.toThrow();
-  });
+test('not exist output dir', async () => {
+  turnOnNock();
+  const errorMessage = 'No such directory. access to not-exist-dir';
+  await expect(loadPage(url, 'not-exist-dir')).rejects.toThrow(errorMessage);
+});
+
+test(`400 response for ${url}`, async () => {
+  turnOnNock({ index: 400, src: [200, 200, 200, 200] });
+  const errorMessage = `Request failed with status code 400. url: ${url}`;
+  await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
+});
+
+const { origin } = new URL(url);
+const link = (new URL(srcLinks[0], origin)).href;
+test(`500 response for ${link}`, async () => {
+  turnOnNock({ index: 200, src: [500, 200, 200, 200] });
+  const errorMessage = `Request failed with status code 500. url: ${link}`;
+  await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
+});
+
+test(`replacing the file ${indexFileName}`, async () => {
+  turnOnNock();
+  const filepath = path.join(tmpdir, indexFileName);
+  await fs.writeFile(filepath, 'data');
+  await loadPage(url, tmpdir);
+  const actual = await fs.readFile(filepath, 'utf-8');
+  const expected = localIndex;
+  expect(actual).toEqual(expected);
+});
+
+test(`dir ${srcDirName} already exists`, async () => {
+  turnOnNock();
+  const dirpath = path.join(tmpdir, srcDirName);
+  await fs.mkdir(dirpath);
+  const errorMessage = `Dir already exists. dirpath: ${dirpath}`;
+  await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
 });
