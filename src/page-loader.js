@@ -2,7 +2,7 @@
 
 import path from 'path';
 import Listr from 'listr';
-import { httpGet, mkdir, writeFile } from './log.js';
+import { http, fs } from './io/index.js';
 import { makeDirNameByUrl, makeFileNameByUrl } from './name.js';
 import { getSourceLinks, replaceSrcLinksOnFilePaths } from './html.js';
 
@@ -17,7 +17,7 @@ const downloadSourceFiles = (url, outputDir, html) => {
       title: filename,
       task: () => {
         const { href } = new URL(link, origin);
-        return httpGet(href).then(({ data }) => writeFile(filepath, data));
+        return http.get(href).then(({ data }) => fs.writeFile(filepath, data));
       },
     };
   }));
@@ -33,14 +33,14 @@ const downloadIndexFile = (url, outputDir, html) => {
   });
   const filename = makeFileNameByUrl(url);
   const filepath = path.join(outputDir, filename);
-  return writeFile(filepath, updatedHtml);
+  return fs.writeFile(filepath, updatedHtml);
 };
 
-const loadPage = (url, outputDir) => httpGet(url).then((response) => {
+const loadPage = (url, outputDir) => http.get(url).then((response) => {
   const html = response.data;
   const srcDirPath = path.join(outputDir, makeDirNameByUrl(url));
   const indexFilePath = path.join(outputDir, makeFileNameByUrl(url));
-  return mkdir(srcDirPath)
+  return fs.mkdir(srcDirPath)
     .then(() => downloadSourceFiles(url, outputDir, html))
     .then(() => downloadIndexFile(url, outputDir, html))
     .then(() => console.log(`Page was successfully downloaded into ${indexFilePath}`));
