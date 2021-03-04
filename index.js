@@ -1,5 +1,5 @@
 // @ts-check
 
-import pageLoader from './src/page-loader.js';
+import loadPage from './src/page-loader.js';
 
-export default pageLoader;
+export default loadPage;
