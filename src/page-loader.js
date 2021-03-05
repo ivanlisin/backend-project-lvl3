@@ -20,7 +20,9 @@ const downloadSourceFiles = (url, outputDir, html) => {
         return http.get(href).then(({ data }) => fs.writeFile(filepath, data));
       },
     };
-  }));
+  }), {
+    concurrent: true,
+  });
   return tasks.run();
 };
 
