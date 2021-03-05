@@ -1,7 +1,7 @@
 // @ts-check
 
 import axios from 'axios';
-import addToLog from './log';
+import addToLog from './log.js';
 
 const get = (url) => {
   try {
