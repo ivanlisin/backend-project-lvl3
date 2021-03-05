@@ -4,7 +4,7 @@ test.each([
   ['/assets/application.css', 'https://ru.hexlet.io/', 'ru-hexlet-io-assets-application.css'],
   ['/assets/professions/nodejs.png', 'https://ru.hexlet.io/', 'ru-hexlet-io-assets-professions-nodejs.png'],
   ['/packs/js/runtime.js', 'https://ru.hexlet.io/', 'ru-hexlet-io-packs-js-runtime.js'],
-  ['http://yandex.ru/', null, 'yandex-ru'],
+  ['http://yandex.ru/', null, 'yandex-ru.html'],
 ])('makeFileNameByUrl with %s', (url, base, expected) => {
   expect(makeFileNameByUrl(url, base)).toBe(expected);
 });

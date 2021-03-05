@@ -11,7 +11,9 @@ export const makeFileNameByUrl = (url, base = null) => {
     origin.replace(/http:\/\/|https:\/\//gm, ''),
     pathname.replace(extname, ''),
   ].join('-');
-  return `${_.kebabCase(str)}${extname}`;
+  return extname === ''
+    ? `${_.kebabCase(str)}.html`
+    : `${_.kebabCase(str)}${extname}`;
 };
 
 export const makeDirNameByUrl = (url, base = null) => {
