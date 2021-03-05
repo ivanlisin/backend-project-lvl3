@@ -2,7 +2,7 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import addToLog from './log';
+import addToLog from './log.js';
 
 const mkdir = (dirpath) => fs.mkdir(dirpath)
   .then(() => {
