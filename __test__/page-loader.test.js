@@ -83,19 +83,19 @@ test('successful page loading', async () => {
 
 test('wrong url', async () => {
   turnOnNock();
-  const errorMessage = 'Invalid URL: wrong-url';
+  const errorMessage = 'connect ECONNREFUSED 127.0.0.1:80';
   await expect(loadPage('wrong-url', tmpdir)).rejects.toThrow(errorMessage);
 });
 
 test('not exist output dir', async () => {
   turnOnNock();
-  const errorMessage = 'No such directory. access to not-exist-dir';
+  const errorMessage = "ENOENT: no such file or directory, mkdir 'not-exist-dir/ru-hexlet-io-courses_files'";
   await expect(loadPage(url, 'not-exist-dir')).rejects.toThrow(errorMessage);
 });
 
 test(`400 response for ${url}`, async () => {
   turnOnNock({ index: 400, src: [200, 200, 200, 200] });
-  const errorMessage = `Request failed with status code 400. url: ${url}`;
+  const errorMessage = 'Request failed with status code 400';
   await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
 });
 
@@ -103,7 +103,7 @@ const { origin } = new URL(url);
 const link = (new URL(srcLinks[0], origin)).href;
 test(`500 response for ${link}`, async () => {
   turnOnNock({ index: 200, src: [500, 200, 200, 200] });
-  const errorMessage = `Request failed with status code 500. url: ${link}`;
+  const errorMessage = 'Request failed with status code 500';
   await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
 });
 
@@ -121,6 +121,6 @@ test(`dir ${srcDirName} already exists`, async () => {
   turnOnNock();
   const dirpath = path.join(tmpdir, srcDirName);
   await fs.mkdir(dirpath);
-  const errorMessage = `Dir already exists. dirpath: ${dirpath}`;
+  const errorMessage = `EEXIST: file already exists, mkdir '${dirpath}'`;
   await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
 });
