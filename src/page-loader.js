@@ -1,52 +1,25 @@
 // @ts-check
 
-import path from 'path';
-import Listr from 'listr';
-import axios from 'axios';
-import { promises as fs } from 'fs';
-import { makeDirNameByUrl, makeFileNameByUrl } from './name.js';
-import { getSourceLinks, replaceSrcLinksOnFilePaths } from './html.js';
+import debug from 'debug';
+import { load, downloadAssets, savePage } from './helpers.js';
+import processAssetsLinks from './html.js';
 
-const downloadSourceFiles = (url, outputDir, html) => {
-  const { origin } = new URL(url);
-  const sourceLinks = getSourceLinks(html, origin);
-  const tasks = new Listr(sourceLinks.map((link) => {
-    const srcDirName = makeDirNameByUrl(url, origin);
-    const filename = makeFileNameByUrl(link, origin);
-    const filepath = path.join(outputDir, srcDirName, filename);
-    return {
-      title: filename,
-      task: () => {
-        const { href } = new URL(link, origin);
-        return axios.get(href).then(({ data }) => fs.writeFile(filepath, data));
-      },
-    };
-  }), {
-    concurrent: true,
-  });
-  return tasks.run();
+const log = debug('page-loader');
+
+const loadPage = (url, outputDir) => {
+  log('Start app', url, outputDir);
+  return load(url)
+    .then((html) => {
+      log('Process html and get assets links');
+      const { updatedHtml, assets } = processAssetsLinks(url, html);
+
+      log('Download assets');
+      return downloadAssets(url, outputDir, assets)
+        .then(() => {
+          log('Save page');
+          return savePage(url, outputDir, updatedHtml);
+        });
+    });
 };
-
-const downloadIndexFile = (url, outputDir, html) => {
-  const { origin } = new URL(url);
-  const updatedHtml = replaceSrcLinksOnFilePaths(html, origin, (link) => {
-    const srcDirName = makeDirNameByUrl(url);
-    const srcFileName = makeFileNameByUrl(link, origin);
-    return path.join(srcDirName, srcFileName);
-  });
-  const filename = makeFileNameByUrl(url);
-  const filepath = path.join(outputDir, filename);
-  return fs.writeFile(filepath, updatedHtml);
-};
-
-const loadPage = (url, outputDir) => axios.get(url).then((response) => {
-  const html = response.data;
-  const srcDirPath = path.join(outputDir, makeDirNameByUrl(url));
-  const indexFilePath = path.join(outputDir, makeFileNameByUrl(url));
-  return fs.mkdir(srcDirPath)
-    .then(() => downloadSourceFiles(url, outputDir, html))
-    .then(() => downloadIndexFile(url, outputDir, html))
-    .then(() => console.log(`Page was successfully downloaded into ${indexFilePath}`));
-});
 
 export default loadPage;

@@ -7,6 +7,7 @@ import nock from 'nock';
 import loadPage from '../src/page-loader';
 
 const url = 'https://ru.hexlet.io/courses';
+const { origin, pathname } = new URL(url);
 
 const indexFileName = 'ru-hexlet-io-courses.html';
 const srcDirName = 'ru-hexlet-io-courses_files';
@@ -54,7 +55,6 @@ afterEach(() => {
 const nockSrcData = 'some data';
 
 const turnOnNock = (resCodes = { index: 200, src: [200, 200, 200, 200] }) => {
-  const { origin, pathname } = new URL(url);
   const data = responseIndex;
   nock(origin).get(pathname).reply(resCodes.index, data);
   srcLinks.forEach((link, i) => {
@@ -83,7 +83,7 @@ test('successful page loading', async () => {
 
 test('wrong url', async () => {
   turnOnNock();
-  const errorMessage = 'connect ECONNREFUSED 127.0.0.1:80';
+  const errorMessage = 'Invalid URL: wrong-url';
   await expect(loadPage('wrong-url', tmpdir)).rejects.toThrow(errorMessage);
 });
 
@@ -99,7 +99,6 @@ test(`400 response for ${url}`, async () => {
   await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
 });
 
-const { origin } = new URL(url);
 const link = (new URL(srcLinks[0], origin)).href;
 test(`500 response for ${link}`, async () => {
   turnOnNock({ index: 200, src: [500, 200, 200, 200] });
@@ -123,4 +122,17 @@ test(`dir ${srcDirName} already exists`, async () => {
   await fs.mkdir(dirpath);
   const errorMessage = `EEXIST: file already exists, mkdir '${dirpath}'`;
   await expect(loadPage(url, tmpdir)).rejects.toThrow(errorMessage);
+});
+
+test('page without assets', async () => {
+  const html = '<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Курсы по программированию Хекслет</title></head><body><h3><a href="/professions/nodejs">Node.js-программист</a></h3></body></html>';
+  nock(origin).get(pathname).reply(200, html);
+  await loadPage(url, tmpdir);
+
+  const filename = path.join(tmpdir, indexFileName);
+  const data = await fs.readFile(filename, 'utf-8');
+  expect(data).toEqual(html);
+
+  const dirname = path.join(tmpdir, srcDirName);
+  await expect(fs.access(dirname)).rejects.toThrow();
 });
