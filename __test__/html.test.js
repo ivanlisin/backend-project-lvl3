@@ -1,5 +1,4 @@
 import path from 'path';
-import _ from 'lodash';
 import { promises as fs } from 'fs';
 import processAssetsLinks from '../src/html';
 
