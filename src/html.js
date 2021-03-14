@@ -1,26 +1,14 @@
 // @ts-check
 
 import cheerio from 'cheerio';
+import path from 'path';
+import { makeFileNameByUrl, makeDirNameByUrl } from './name';
 
 const tagAndResourceAttributeMapping = { img: 'src', link: 'href', script: 'src' };
 
-export const getSourceLinks = (html, origin) => {
-  const $ = cheerio.load(html);
-  return Object.entries(tagAndResourceAttributeMapping)
-    .map(([tag, resAttr]) => {
-      const elements = $(tag);
-      const links = elements.map((i, el) => $(el).attr(resAttr));
-      return links.toArray();
-    })
-    // @ts-ignore
-    .flat(1)
-    .filter((url) => {
-      const { href } = new URL(url, origin);
-      return href.match(new RegExp(origin));
-    });
-};
-
-export const replaceSrcLinksOnFilePaths = (html, origin, makeFilePathByUrl) => {
+export default (url, html) => {
+  const { origin } = new URL(url);
+  const assets = [];
   const $ = cheerio.load(html);
   Object.entries(tagAndResourceAttributeMapping)
     .forEach(([tag, resAttr]) => {
@@ -30,10 +18,14 @@ export const replaceSrcLinksOnFilePaths = (html, origin, makeFilePathByUrl) => {
         const hasLink = typeof link === 'string';
         const isLinkToOriginHost = href.includes(origin);
         if (hasLink && isLinkToOriginHost) {
-          const filepath = makeFilePathByUrl(link, origin);
+          assets.push(link);
+          const dirname = makeDirNameByUrl(url);
+          const filename = makeFileNameByUrl(url, link);
+          const filepath = path.join(dirname, filename);
           $(el).attr(resAttr, filepath);
         }
       });
     });
-  return $.html();
+  const updatedHtml = $.html();
+  return { updatedHtml, assets };
 };
