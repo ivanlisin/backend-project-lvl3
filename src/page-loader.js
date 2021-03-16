@@ -15,10 +15,11 @@ const loadPage = (url, outputDir) => {
 
       log('Download assets');
       return downloadAssets(url, outputDir, assets)
-        .then(() => {
-          log('Save page');
-          return savePage(url, outputDir, updatedHtml);
-        });
+        .then(() => Promise.resolve(updatedHtml));
+    })
+    .then((updatedHtml) => {
+      log('Save page');
+      return savePage(url, outputDir, updatedHtml);
     });
 };
 
