@@ -20,7 +20,7 @@ export const load = (url, asset = null) => {
   return axios.get(href).then(({ data }) => data);
 };
 
-const save = (data, outputDir, url, asset = null) => {
+export const save = (url, outputDir, data, asset = null) => {
   const isItSaveAsset = asset !== null;
   const segment = isItSaveAsset
     ? path.join(makeDirNameByUrl(url), makeFileNameByUrl(url, asset))
@@ -41,16 +41,10 @@ export const downloadAssets = (url, outputDir, assets) => {
   const tasks = assets.map((asset) => ({
     title: makeFileNameByUrl(url, asset),
     task: () => load(url, asset)
-      .then((data) => save(data, outputDir, url, asset)),
+      .then((data) => save(url, outputDir, data, asset)),
   }));
   const options = { concurrency: true };
   const listr = new Listr(tasks, options);
 
   return fs.mkdir(dirpath).then(() => listr.run());
 };
-
-export const savePage = (url, outputDir, html) => save(html, outputDir, url)
-  .then(() => {
-    const filename = makeFileNameByUrl(url);
-    console.log(`Page was successfully downloaded into ${filename}`);
-  });

@@ -1,8 +1,9 @@
 // @ts-check
 
 import debug from 'debug';
-import { load, downloadAssets, savePage } from './helpers.js';
 import processAssetsLinks from './html.js';
+import { load, downloadAssets, save } from './helpers.js';
+import { makeFileNameByUrl } from './name.js';
 
 const log = debug('page-loader');
 
@@ -19,7 +20,12 @@ const loadPage = (url, outputDir) => {
     })
     .then((updatedHtml) => {
       log('Save page');
-      return savePage(url, outputDir, updatedHtml);
+      return save(url, outputDir, updatedHtml);
+    })
+    .then(() => {
+      log('Successful completion of the app');
+      const filename = makeFileNameByUrl(url);
+      console.log(`Page was successfully downloaded into ${filename}`);
     });
 };
 
