@@ -10,9 +10,8 @@ test.each([
 });
 
 test.each([
-  ['https://ru.hexlet.io/courses', null, 'ru-hexlet-io-courses_files'],
-  ['https://ru.hexlet.io/', '/courses', 'ru-hexlet-io-courses_files'],
-  ['http://yandex.ru/', null, 'yandex-ru_files'],
-])('makeDirNameByUrl with %s', (url, base, expected) => {
-  expect(makeDirNameByUrl(url, base)).toBe(expected);
+  ['https://ru.hexlet.io/courses', 'ru-hexlet-io-courses_files'],
+  ['http://yandex.ru/', 'yandex-ru_files'],
+])('makeDirNameByUrl with %s', (url, expected) => {
+  expect(makeDirNameByUrl(url)).toBe(expected);
 });
