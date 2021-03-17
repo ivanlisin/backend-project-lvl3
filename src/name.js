@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import path from 'path';
 
-const processUrl = (url, asset) => {
+const processUrl = (url, asset = null) => {
   const isItAssetUrl = asset !== null;
   const { origin, pathname } = isItAssetUrl
     ? new URL(asset, url)
@@ -24,7 +24,18 @@ export const makeFileNameByUrl = (url, asset = null) => {
     : `${name}${extname}`;
 };
 
-export const makeDirNameByUrl = (url, asset = null) => {
-  const { name } = processUrl(url, asset);
+export const makeDirNameByUrl = (url) => {
+  const { name } = processUrl(url);
   return `${name}_files`;
+};
+
+export const makeFilePathByUrl = (outputDir, url, asset = null) => {
+  const isAsset = asset !== null;
+  if (isAsset) {
+    const dirname = makeDirNameByUrl(url);
+    const filename = makeFileNameByUrl(url, asset);
+    return path.join(outputDir, dirname, filename);
+  }
+  const filename = makeFileNameByUrl(url);
+  return path.join(outputDir, filename);
 };
