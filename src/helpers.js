@@ -4,7 +4,7 @@ import axios from 'axios';
 import path from 'path';
 import Listr from 'listr';
 import { promises as fs } from 'fs';
-import { makeFileNameByUrl, makeDirNameByUrl } from './name';
+import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name';
 
 export const load = (url, asset = null) => {
   let href;
@@ -21,11 +21,7 @@ export const load = (url, asset = null) => {
 };
 
 export const save = (url, outputDir, data, asset = null) => {
-  const isItSaveAsset = asset !== null;
-  const segment = isItSaveAsset
-    ? path.join(makeDirNameByUrl(url), makeFileNameByUrl(url, asset))
-    : path.join(makeFileNameByUrl(url, asset));
-  const filepath = path.join(outputDir, segment);
+  const filepath = makeFilePathByUrl(outputDir, url, asset);
   return fs.writeFile(filepath, data);
 };
 
