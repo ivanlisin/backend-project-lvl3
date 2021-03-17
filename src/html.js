@@ -1,27 +1,37 @@
 // @ts-check
 
 import cheerio from 'cheerio';
-import path from 'path';
-import { makeFileNameByUrl, makeDirNameByUrl } from './name';
+import { makeFilePathByUrl } from './name';
 
 const tagAndResourceAttributeMapping = { img: 'src', link: 'href', script: 'src' };
 
-export default (url, html) => {
+const isCorrectLink = (url, asset) => {
+  const hasLink = typeof asset === 'string';
+  if (!hasLink) {
+    return false;
+  }
+
   const { origin } = new URL(url);
+  const { href } = new URL(asset, origin);
+
+  const isLinkToOriginHost = href.includes(origin);
+  if (!isLinkToOriginHost) {
+    return false;
+  }
+
+  return true;
+};
+
+export default (url, html) => {
   const assets = [];
   const $ = cheerio.load(html);
   Object.entries(tagAndResourceAttributeMapping)
     .forEach(([tag, resAttr]) => {
       $(tag).each((i, el) => {
-        const link = $(el).attr(resAttr);
-        const { href } = new URL(link, origin);
-        const hasLink = typeof link === 'string';
-        const isLinkToOriginHost = href.includes(origin);
-        if (hasLink && isLinkToOriginHost) {
-          assets.push(link);
-          const dirname = makeDirNameByUrl(url);
-          const filename = makeFileNameByUrl(url, link);
-          const filepath = path.join(dirname, filename);
+        const asset = $(el).attr(resAttr);
+        if (isCorrectLink(url, asset)) {
+          assets.push(asset);
+          const filepath = makeFilePathByUrl('', url, asset);
           $(el).attr(resAttr, filepath);
         }
       });
