@@ -4,7 +4,7 @@ import axios from 'axios';
 import path from 'path';
 import Listr from 'listr';
 import { promises as fs } from 'fs';
-import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name';
+import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name.js';
 
 export const load = (url, asset = null) => {
   let href;
