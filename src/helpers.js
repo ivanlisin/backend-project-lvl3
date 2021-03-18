@@ -4,7 +4,7 @@ import axios from 'axios';
 import path from 'path';
 import Listr from 'listr';
 import { promises as fs } from 'fs';
-import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name';
+import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name.js';
 
 export const load = (url, asset = null) => {
   let href;
@@ -17,12 +17,13 @@ export const load = (url, asset = null) => {
   } catch (err) {
     return Promise.reject(err);
   }
-  return axios.get(href).then(({ data }) => data);
+  const options = { responseType: 'arraybuffer' };
+  return axios.get(href, options).then(({ data }) => data);
 };
 
 export const save = (url, outputDir, data, asset = null) => {
   const filepath = makeFilePathByUrl(outputDir, url, asset);
-  return fs.writeFile(filepath, data);
+  return fs.writeFile(filepath, data, 'utf-8');
 };
 
 export const downloadAssets = (url, outputDir, assets) => {

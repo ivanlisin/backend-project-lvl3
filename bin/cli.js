@@ -2,9 +2,11 @@
 
 // @ts-check
 
-import { program } from 'commander';
+import pkg from 'commander';
 import { promises as fs } from 'fs';
 import loadPage from '../src/page-loader.js';
+
+const { program } = pkg;
 
 (async () => {
   const data = await fs.readFile('package.json', 'utf-8');
@@ -14,7 +16,7 @@ import loadPage from '../src/page-loader.js';
     .arguments('<url>')
     .description(description)
     .version(version)
-    .option('--output [dirpath]', 'output directory', '.')
+    .option('-o, --output [dirpath]', 'output directory', '.')
     .action(async (url) => {
       const options = program.opts();
       try {
