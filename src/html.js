@@ -1,7 +1,7 @@
 // @ts-check
 
 import cheerio from 'cheerio';
-import { makeFilePathByUrl } from './name';
+import { makeFilePathByUrl } from './name.js';
 
 const tagAndResourceAttributeMapping = { img: 'src', link: 'href', script: 'src' };
 
