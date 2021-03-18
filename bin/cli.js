@@ -2,9 +2,11 @@
 
 // @ts-check
 
-import { program } from 'commander';
+import pkg from 'commander';
 import { promises as fs } from 'fs';
 import loadPage from '../src/page-loader.js';
+
+const { program } = pkg;
 
 (async () => {
   const data = await fs.readFile('package.json', 'utf-8');
