@@ -18,7 +18,7 @@ export const load = (url, asset = null) => {
     return Promise.reject(err);
   }
   const options = { responseType: 'arraybuffer' };
-  return axios.get(href, options).then(({ data }) => data);
+  return axios.get(href, options).then(({ data }) => data.toString());
 };
 
 export const save = (url, outputDir, data, asset = null) => {
