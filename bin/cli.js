@@ -16,7 +16,7 @@ const { program } = pkg;
     .arguments('<url>')
     .description(description)
     .version(version)
-    .option('--output [dirpath]', 'output directory', '.')
+    .option('-o, --output [dirpath]', 'output directory', '.')
     .action(async (url) => {
       const options = program.opts();
       try {
