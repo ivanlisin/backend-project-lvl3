@@ -17,12 +17,13 @@ export const load = (url, asset = null) => {
   } catch (err) {
     return Promise.reject(err);
   }
-  return axios.get(href).then(({ data }) => data);
+  const options = { responseType: 'arraybuffer' };
+  return axios.get(href, options).then(({ data }) => data);
 };
 
 export const save = (url, outputDir, data, asset = null) => {
   const filepath = makeFilePathByUrl(outputDir, url, asset);
-  return fs.writeFile(filepath, data);
+  return fs.writeFile(filepath, data, 'utf-8');
 };
 
 export const downloadAssets = (url, outputDir, assets) => {
