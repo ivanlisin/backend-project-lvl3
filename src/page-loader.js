@@ -11,15 +11,15 @@ const loadPage = (url, outputDir) => {
   log('Start app', url, outputDir);
   return load(url)
     .then((html) => {
-      log('Process html and get assets links');
+      log('Load page', html);
       const { updatedHtml, assets } = processAssetsLinks(url, html);
 
-      log('Download assets');
+      log('Download assets', assets);
       return downloadAssets(url, outputDir, assets)
         .then(() => updatedHtml);
     })
     .then((updatedHtml) => {
-      log('Save page');
+      log('Save page', updatedHtml);
       return save(url, outputDir, updatedHtml);
     })
     .then(() => {
