@@ -6,25 +6,14 @@ import Listr from 'listr';
 import { promises as fs } from 'fs';
 import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name.js';
 
-export const load = (url, asset = null) => {
-  let href;
-  try {
-    const isItLoadAsset = asset !== null;
-    const urlObj = isItLoadAsset
-      ? new URL(asset, url)
-      : new URL(url);
-    href = urlObj.href;
-  } catch (err) {
-    return Promise.reject(err);
-  }
+const load = (href) => {
   const options = { responseType: 'arraybuffer' };
   return axios.get(href, options).then(({ data }) => data.toString());
 };
 
-export const save = (url, outputDir, data, asset = null) => {
-  const filepath = makeFilePathByUrl(outputDir, url, asset);
-  return fs.writeFile(filepath, data, 'utf-8');
-};
+const save = (filepath, data) => fs.writeFile(filepath, data, 'utf-8');
+
+export const loadIndex = load;
 
 export const downloadAssets = (url, outputDir, assets) => {
   const hasAssets = assets.length !== 0;
@@ -37,11 +26,25 @@ export const downloadAssets = (url, outputDir, assets) => {
 
   const tasks = assets.map((asset) => ({
     title: makeFileNameByUrl(url, asset),
-    task: () => load(url, asset)
-      .then((data) => save(url, outputDir, data, asset)),
+    task: () => {
+      const { href } = new URL(asset, url);
+      return load(href)
+        .then((data) => {
+          const filepath = makeFilePathByUrl(outputDir, url, asset);
+          return save(filepath, data);
+        });
+    },
   }));
   const options = { concurrency: true };
   const listr = new Listr(tasks, options);
 
   return fs.mkdir(dirpath).then(() => listr.run());
+};
+
+export const saveIndex = (url, outputDir, html) => {
+  const filepath = makeFilePathByUrl(outputDir, url);
+  return save(filepath, html).then(() => {
+    const filename = makeFileNameByUrl(url);
+    console.log(`Page was successfully downloaded into ${filename}`);
+  });
 };
