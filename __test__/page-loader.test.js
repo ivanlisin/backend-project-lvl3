@@ -83,7 +83,7 @@ test('successful page loading', async () => {
 
 test('wrong url', async () => {
   turnOnNock();
-  const errorMessage = 'Invalid URL: wrong-url';
+  const errorMessage = 'connect ECONNREFUSED 127.0.0.1:80';
   await expect(loadPage('wrong-url', tmpdir)).rejects.toThrow(errorMessage);
 });
 
