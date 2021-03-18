@@ -16,7 +16,7 @@ const loadPage = (url, outputDir) => {
 
       log('Download assets');
       return downloadAssets(url, outputDir, assets)
-        .then(() => Promise.resolve(updatedHtml));
+        .then(() => updatedHtml);
     })
     .then((updatedHtml) => {
       log('Save page');
