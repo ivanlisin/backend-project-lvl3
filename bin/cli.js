@@ -19,12 +19,15 @@ const { program } = pkg;
     .option('-o, --output [dirpath]', 'output directory', '.')
     .action(async (url) => {
       const options = program.opts();
+      let message;
       try {
-        // @ts-ignore
-        await loadPage(url, options.output);
+        message = await loadPage(url, options.output);
       } catch (err) {
-        console.log(err.message);
+        console.error(err.message);
+        process.exit(1);
       }
+      console.log(message);
+      process.exit(0);
     })
     .parse(process.argv);
 })();
