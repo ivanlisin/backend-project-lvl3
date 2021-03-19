@@ -8,7 +8,7 @@ import { makeFileNameByUrl, makeDirNameByUrl, makeFilePathByUrl } from './name.j
 
 const load = (href) => {
   const options = { responseType: 'arraybuffer' };
-  return axios.get(href, options).then(({ data }) => data.toString());
+  return axios.get(href, options).then(({ data }) => data);
 };
 
 const save = (filepath, data) => fs.writeFile(filepath, data, 'utf-8');
