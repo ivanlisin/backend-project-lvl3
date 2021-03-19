@@ -10,9 +10,7 @@ const log = debug('page-loader');
 const loadPage = (url, outputDir) => {
   log('Start app', url, outputDir);
   return loadIndex(url)
-    .then((data) => {
-      const html = data.toString();
-
+    .then((html) => {
       log('Load page', html);
       const { updatedHtml, assets } = processAssetsLinks(url, html);
 
