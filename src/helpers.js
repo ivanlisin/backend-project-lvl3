@@ -43,8 +43,5 @@ export const downloadAssets = (url, outputDir, assets) => {
 
 export const saveIndex = (url, outputDir, html) => {
   const filepath = makeFilePathByUrl(outputDir, url);
-  return save(filepath, html).then(() => {
-    const filename = makeFileNameByUrl(url);
-    console.log(`Page was successfully downloaded into ${filename}`);
-  });
+  return save(filepath, html);
 };
