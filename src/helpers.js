@@ -13,7 +13,7 @@ const load = (href) => {
 
 const save = (filepath, data) => fs.writeFile(filepath, data, 'utf-8');
 
-export const loadIndex = load;
+export const loadIndex = (href) => load(href).then((data) => data.toString());
 
 export const downloadAssets = (url, outputDir, assets) => {
   const hasAssets = assets.length !== 0;
