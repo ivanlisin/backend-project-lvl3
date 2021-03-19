@@ -5,7 +5,7 @@ import { makeFilePathByUrl } from './name.js';
 
 const tagAndResourceAttributeMapping = { img: 'src', link: 'href', script: 'src' };
 
-const isCorrectLink = (url, asset) => {
+const isLocalLink = (url, asset) => {
   const hasLink = typeof asset === 'string';
   if (!hasLink) {
     return false;
@@ -29,7 +29,7 @@ export default (url, html) => {
     .forEach(([tag, resAttr]) => {
       $(tag).each((i, el) => {
         const asset = $(el).attr(resAttr);
-        if (isCorrectLink(url, asset)) {
+        if (isLocalLink(url, asset)) {
           assets.push(asset);
           const filepath = makeFilePathByUrl('', url, asset);
           $(el).attr(resAttr, filepath);
